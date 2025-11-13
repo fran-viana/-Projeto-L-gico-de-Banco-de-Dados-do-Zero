@@ -1,0 +1,88 @@
+-- 1️ Recuperação simples: listar todos os clientes cadastrados
+SELECT * FROM Cliente;
+
+-- 2️ Recuperar os veículos e seus respectivos donos
+SELECT 
+    v.modelo,
+    v.placa,
+    v.ano,
+    c.nome AS nome_cliente
+FROM Veiculo v
+JOIN Cliente c ON v.idCliente = c.idCliente;
+
+-- 3️ Filtrar ordens de serviço emitidas depois de uma data específica
+SELECT 
+    o.idOrdem,
+    o.data_emissao,
+    c.nome AS cliente,
+    m.nome AS mecanico
+FROM Ordem_Servico o
+JOIN Cliente c ON o.idCliente = c.idCliente
+JOIN Mecanico m ON o.idMecanico = m.idMecanico
+WHERE o.data_emissao >= '2025-11-11';
+
+-- 4️ Criar um atributo derivado: calcular o valor total estimado de serviços (simulação)
+-- Exemplo: considerando que cada cliente fez 2 serviços aleatórios com valores da tabela Serviço
+SELECT 
+    c.nome AS cliente,
+    COUNT(v.idVeiculo) AS qtd_veiculos,
+    (SELECT SUM(valor) FROM Servico) / 2 AS valor_estimado
+FROM Cliente c
+LEFT JOIN Veiculo v ON v.idCliente = c.idCliente
+GROUP BY c.idCliente;
+
+-- 5️ Ordenar os mecânicos por especialidade (A-Z)
+SELECT * FROM Mecanico
+ORDER BY especialidade ASC;
+
+-- 6️ Mostrar quais oficinas oferecem mais de 1 tipo de serviço (uso de GROUP BY + HAVING)
+SELECT 
+    o.nome AS oficina,
+    COUNT(sho.idServico) AS qtd_servicos
+FROM Oficina o
+JOIN Servico_has_Oficina sho ON o.idOficina = sho.idOficina
+GROUP BY o.idOficina
+HAVING COUNT(sho.idServico) > 1;
+
+-- 7️ Junção mais complexa: ordens de serviço completas (cliente, veículo, mecânico e oficina)
+SELECT 
+    os.idOrdem,
+    os.data_emissao,
+    c.nome AS cliente,
+    v.modelo AS veiculo,
+    m.nome AS mecanico,
+    o2.nome AS oficina
+FROM Ordem_Servico os
+JOIN Cliente c ON os.idCliente = c.idCliente
+JOIN Veiculo v ON os.idVeiculo = v.idVeiculo
+JOIN Mecanico m ON os.idMecanico = m.idMecanico
+JOIN Servico_has_Oficina sho ON sho.idOficina IN (1,2)
+JOIN Oficina o2 ON sho.idOficina = o2.idOficina
+ORDER BY os.data_emissao DESC;
+
+-- 8️ Quantos veículos cada cliente possui
+SELECT 
+    c.nome AS cliente,
+    COUNT(v.idVeiculo) AS total_veiculos
+FROM Cliente c
+LEFT JOIN Veiculo v ON c.idCliente = v.idCliente
+GROUP BY c.idCliente;
+
+-- 9️ Valor médio dos serviços disponíveis por oficina
+SELECT 
+    o.nome AS oficina,
+    AVG(s.valor) AS media_valor_servico
+FROM Oficina o
+JOIN Servico_has_Oficina sho ON o.idOficina = sho.idOficina
+JOIN Servico s ON sho.idServico = s.idServico
+GROUP BY o.idOficina;
+
+-- 10 Clientes que possuem veículos fabricados depois de 2015
+SELECT 
+    c.nome,
+    v.modelo,
+    v.ano
+FROM Cliente c
+JOIN Veiculo v ON c.idCliente = v.idCliente
+WHERE v.ano > 2015
+ORDER BY v.ano DESC;
